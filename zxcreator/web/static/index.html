@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZX Spectrum Game Creator Studio</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header with Sinclair Rainbow Stripes -->
+  <header class="app-header">
+    <div class="header-main">
+      <div class="logo-area">
+        <span class="sinclair-logo">Sinclair</span>
+        <span class="zx-badge">ZX SPECTRUM</span>
+        <span class="creator-title">GAME CREATOR STUDIO</span>
+      </div>
+      <div class="header-actions">
+        <select id="preset-selector" title="Load Preset Game">
+          <option value="platformer">Template: Platformer (Castle Quest)</option>
+          <option value="topdown">Template: Top-Down (Dungeon Explorer)</option>
+          <option value="shmup">Template: Shoot 'Em Up (Cosmic Defender)</option>
+          <option value="puzzle">Template: Grid Puzzle (Boulder Push)</option>
+          <option value="adventure">Template: Graphic Adventure (Haunted Manor)</option>
+        </select>
+        <button id="btn-load-preset" class="btn secondary">Load Preset</button>
+        <button id="btn-test-play" class="btn play-btn">▶ Play in Simulator</button>
+        <button id="btn-export-tap" class="btn primary">💾 Export .TAP</button>
+        <button id="btn-export-asm" class="btn secondary">📝 Export .ASM</button>
+        <button id="btn-export-json" class="btn secondary">📦 Save Project</button>
+        <label for="file-import-json" class="btn secondary file-label">📂 Open Project</label>
+        <input type="file" id="file-import-json" accept=".json" style="display:none;">
+      </div>
+    </div>
+    <div class="sinclair-stripe">
+      <span class="s-red"></span>
+      <span class="s-yellow"></span>
+      <span class="s-green"></span>
+      <span class="s-cyan"></span>
+      <span class="s-magenta"></span>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="nav-tabs">
+    <button class="tab-btn active" data-tab="tab-room">🗺️ Room & Level Editor</button>
+    <button class="tab-btn" data-tab="tab-sprites">👾 Sprite Editor</button>
+    <button class="tab-btn" data-tab="tab-tiles">🧱 Tile Editor</button>
+    <button class="tab-btn" data-tab="tab-simulator">🕹️ ZX Spectrum Simulator</button>
+    <button class="tab-btn" data-tab="tab-asm">📜 Z80 Assembly & Machine Code</button>
+    <button class="tab-btn" data-tab="tab-settings">⚙️ Game Configuration</button>
+  </nav>
+
+  <!-- Main Workspace Content -->
+  <main class="workspace">
+    
+    <!-- TAB 1: Room & Level Editor -->
+    <section id="tab-room" class="tab-content active">
+      <div class="editor-layout">
+        <!-- Sidebar: Tile Palette and Tools -->
+        <aside class="editor-sidebar">
+          <h3>Tools</h3>
+          <div class="tool-group">
+            <button class="tool-btn active" id="tool-paint">✏️ Paint Tile</button>
+            <button class="tool-btn" id="tool-player">👤 Place Player</button>
+            <button class="tool-btn" id="tool-enemy">👾 Place Enemy</button>
+            <button class="tool-btn" id="tool-erase">🧹 Clear Tile</button>
+          </div>
+
+          <h3>Tile Palette</h3>
+          <div id="tile-palette" class="tile-palette">
+            <!-- Populated via JS -->
+          </div>
+
+          <h3>Room Management</h3>
+          <div class="room-selector-row">
+            <label for="room-select">Room:</label>
+            <select id="room-select"></select>
+            <button id="btn-add-room" class="btn mini" title="Add Room">+</button>
+            <button id="btn-del-room" class="btn mini danger" title="Delete Room">-</button>
+          </div>
+
+          <div class="property-group">
+            <label>Room Name:</label>
+            <input type="text" id="room-name-input" value="Room 1">
+          </div>
+
+          <h3>Exits (Room Links)</h3>
+          <div class="grid-2col">
+            <div>
+              <label>North:</label>
+              <select id="exit-north"></select>
+            </div>
+            <div>
+              <label>South:</label>
+              <select id="exit-south"></select>
+            </div>
+            <div>
+              <label>West:</label>
+              <select id="exit-west"></select>
+            </div>
+            <div>
+              <label>East:</label>
+              <select id="exit-east"></select>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Canvas Area: 16x11 Tiles = 256x176 pixels -->
+        <div class="canvas-container">
+          <div class="screen-frame">
+            <div class="screen-bezel">
+              <div class="bezel-label">SINCLAIR RESEARCH - 256x192</div>
+              <canvas id="room-canvas" width="512" height="352"></canvas>
+            </div>
+          </div>
+          <div class="canvas-hint">Click or drag on the room canvas to paint tiles or place entities. (16 tiles wide × 11 tiles high)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: Sprite Editor -->
+    <section id="tab-sprites" class="tab-content">
+      <div class="editor-layout">
+        <aside class="editor-sidebar">
+          <h3>Sprite List</h3>
+          <div id="sprite-list" class="item-list"></div>
+          <button id="btn-add-sprite" class="btn secondary full">+ New Sprite</button>
+
+          <h3>Color Attributes</h3>
+          <div class="property-group">
+            <label>INK Color (Foreground):</label>
+            <select id="sprite-ink"></select>
+          </div>
+          <div class="property-group">
+            <label>PAPER Color (Background):</label>
+            <select id="sprite-paper"></select>
+          </div>
+          <div class="property-group">
+            <label>
+              <input type="checkbox" id="sprite-bright" checked> BRIGHT Attribute
+            </label>
+          </div>
+
+          <h3>Frames</h3>
+          <div class="frame-controls">
+            <button id="btn-prev-frame" class="btn mini">◀</button>
+            <span id="frame-counter">Frame 1 / 1</span>
+            <button id="btn-next-frame" class="btn mini">▶</button>
+            <button id="btn-add-frame" class="btn mini" title="Add Animation Frame">+</button>
+          </div>
+
+          <div class="sprite-preview-box">
+            <h4>Animation Preview</h4>
+            <canvas id="sprite-preview" width="64" height="64"></canvas>
+          </div>
+        </aside>
+
+        <div class="canvas-container">
+          <div class="toolbar-row">
+            <button class="tool-btn active" id="sp-tool-pencil">✏️ Pencil</button>
+            <button class="tool-btn" id="sp-tool-eraser">🧹 Eraser</button>
+            <button class="tool-btn" id="sp-tool-fill">🪣 Bucket</button>
+            <button class="tool-btn" id="sp-tool-invert">🔄 Invert</button>
+            <button class="tool-btn" id="sp-tool-clear">🗑️ Clear</button>
+          </div>
+          <canvas id="sprite-canvas" width="384" height="384"></canvas>
+          <div class="canvas-hint">16x16 pixel matrix. Click pixels to toggle them on or off.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: Tile Editor -->
+    <section id="tab-tiles" class="tab-content">
+      <div class="editor-layout">
+        <aside class="editor-sidebar">
+          <h3>Tiles</h3>
+          <div id="tile-editor-list" class="item-list"></div>
+          <button id="btn-add-tile" class="btn secondary full">+ New Tile</button>
+
+          <h3>Properties</h3>
+          <div class="property-group">
+            <label>Tile Name:</label>
+            <input type="text" id="tile-name-input">
+          </div>
+          <div class="property-group">
+            <label>Collision Type:</label>
+            <select id="tile-collision">
+              <option value="empty">Empty Space (Passable)</option>
+              <option value="solid">Solid Wall (Blocks Movement)</option>
+              <option value="platform">Jump-Through Platform</option>
+              <option value="ladder">Ladder (Climbable)</option>
+              <option value="hazard">Hazard (Spikes / Deadly)</option>
+              <option value="collectible">Collectible Item (Coin / Gem)</option>
+              <option value="key">Key (Unlocks Doors)</option>
+              <option value="door">Locked Door</option>
+              <option value="pushable">Pushable Boulder / Block</option>
+              <option value="exit">Exit Portal (Wins/Next Level)</option>
+            </select>
+          </div>
+          <div class="property-group">
+            <label>Score Value:</label>
+            <input type="number" id="tile-score-val" value="0">
+          </div>
+          <div class="property-group">
+            <label>INK Color:</label>
+            <select id="tile-ink"></select>
+          </div>
+          <div class="property-group">
+            <label>PAPER Color:</label>
+            <select id="tile-paper"></select>
+          </div>
+          <div class="property-group">
+            <label>
+              <input type="checkbox" id="tile-bright"> BRIGHT Attribute
+            </label>
+          </div>
+        </aside>
+
+        <div class="canvas-container">
+          <div class="toolbar-row">
+            <button class="tool-btn active" id="tile-tool-pencil">✏️ Pencil</button>
+            <button class="tool-btn" id="tile-tool-eraser">🧹 Eraser</button>
+            <button class="tool-btn" id="tile-tool-fill">🪣 Bucket</button>
+            <button class="tool-btn" id="tile-tool-invert">🔄 Invert</button>
+            <button class="tool-btn" id="tile-tool-clear">🗑️ Clear</button>
+          </div>
+          <canvas id="tile-canvas" width="384" height="384"></canvas>
+          <div class="canvas-hint">Design the 16x16 tile pattern.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: ZX Spectrum Simulator -->
+    <section id="tab-simulator" class="tab-content">
+      <div class="simulator-wrapper">
+        <div class="sim-display-area">
+          <div class="crt-monitor">
+            <div class="crt-screen">
+              <canvas id="sim-canvas" width="512" height="384"></canvas>
+            </div>
+          </div>
+          <div class="sim-controls-panel">
+            <button id="sim-btn-start" class="btn play-btn">▶ Start Game</button>
+            <button id="sim-btn-pause" class="btn secondary">⏸ Pause</button>
+            <button id="sim-btn-reset" class="btn danger">🔄 Restart</button>
+            <label class="sound-toggle">
+              <input type="checkbox" id="sim-sound-chk" checked> 🔊 1-Bit Beeper Audio
+            </label>
+          </div>
+        </div>
+
+        <div class="sim-info-panel">
+          <h3>🕹️ How to Play</h3>
+          <div class="key-guide">
+            <div class="key-box"><span class="k">Q</span> Up / Jump</div>
+            <div class="key-box"><span class="k">A</span> Down</div>
+            <div class="key-box"><span class="k">O</span> Left</div>
+            <div class="key-box"><span class="k">P</span> Right</div>
+            <div class="key-box"><span class="k">SPACE</span> Fire / Jump</div>
+          </div>
+          <p class="sim-note">Arrow keys and WASD are also supported. Web Audio generates authentic Sinclair 1-bit beeper pitch sweeps!</p>
+
+          <h3>Live Telemetry</h3>
+          <table class="telemetry-table">
+            <tr><td>Game Title:</td><td id="tel-title">-</td></tr>
+            <tr><td>Genre Engine:</td><td id="tel-genre">-</td></tr>
+            <tr><td>Player (X, Y):</td><td id="tel-player-pos">0, 0</td></tr>
+            <tr><td>Score:</td><td id="tel-score">0</td></tr>
+            <tr><td>Lives:</td><td id="tel-lives">3</td></tr>
+            <tr><td>Current Room:</td><td id="tel-room">0</td></tr>
+            <tr><td>FPS:</td><td id="tel-fps">50</td></tr>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: Z80 Assembly & Machine Code -->
+    <section id="tab-asm" class="tab-content">
+      <div class="asm-wrapper">
+        <div class="asm-header">
+          <div class="asm-stats">
+            <span id="asm-lines-stat">Lines: 0</span> |
+            <span id="asm-origin-stat">Origin: $6000 (24576)</span> |
+            <span id="asm-status">Ready</span>
+          </div>
+          <div class="asm-actions">
+            <button id="btn-refresh-asm" class="btn secondary">🔄 Re-Generate Assembly</button>
+            <button id="btn-copy-asm" class="btn secondary">📋 Copy to Clipboard</button>
+            <button id="btn-download-asm-direct" class="btn primary">💾 Download .ASM</button>
+            <button id="btn-download-tap-direct" class="btn primary">📼 Download .TAP</button>
+          </div>
+        </div>
+        <textarea id="asm-code-area" spellcheck="false" readonly></textarea>
+      </div>
+    </section>
+
+    <!-- TAB 6: Game Configuration -->
+    <section id="tab-settings" class="tab-content">
+      <div class="settings-form">
+        <h2>Game Metadata</h2>
+        <div class="form-row">
+          <label>Game Title (Max 10-20 chars):</label>
+          <input type="text" id="cfg-title" value="SPECTRUM QUEST" maxlength="20">
+        </div>
+        <div class="form-row">
+          <label>Author / Studio:</label>
+          <input type="text" id="cfg-author" value="RETRO DEV" maxlength="16">
+        </div>
+        <div class="form-row">
+          <label>Year of Release:</label>
+          <input type="number" id="cfg-year" value="1983" min="1982" max="2030">
+        </div>
+        <div class="form-row">
+          <label>Game Genre Archetype:</label>
+          <select id="cfg-genre">
+            <option value="platformer">Platformer (Manic Miner / Jet Set Willy style)</option>
+            <option value="topdown">Top-Down Adventure (Sabre Wulf / Gauntlet style)</option>
+            <option value="shmup">Shoot 'Em Up (Cosmic Defender / Space Invaders style)</option>
+            <option value="puzzle">Grid Puzzle (Boulder Dash / Sokoban style)</option>
+            <option value="adventure">Graphic & Text Adventure (Illustrated story style)</option>
+          </select>
+        </div>
+
+        <h2>Spectrum Screen & Colors</h2>
+        <div class="form-row">
+          <label>Border Color:</label>
+          <select id="cfg-border"></select>
+        </div>
+        <div class="form-row">
+          <label>Default Paper (Background):</label>
+          <select id="cfg-paper"></select>
+        </div>
+        <div class="form-row">
+          <label>Default Ink (Foreground):</label>
+          <select id="cfg-ink"></select>
+        </div>
+        <div class="form-row">
+          <label>
+            <input type="checkbox" id="cfg-bright" checked> Enable BRIGHT attribute by default
+          </label>
+        </div>
+
+        <h2>Gameplay & Physics</h2>
+        <div class="form-row">
+          <label>Starting Lives:</label>
+          <input type="number" id="cfg-lives" value="3" min="1" max="9">
+        </div>
+        <div class="form-row">
+          <label>Player Walk Speed:</label>
+          <input type="number" id="cfg-speed" value="2" min="1" max="8">
+        </div>
+        <div class="form-row">
+          <label>Gravity Acceleration (Platformer):</label>
+          <input type="number" id="cfg-gravity" value="2" min="1" max="6">
+        </div>
+        <div class="form-row">
+          <label>Jump Impulse Strength (Platformer):</label>
+          <input type="number" id="cfg-jump" value="7" min="3" max="14">
+        </div>
+        <div class="form-row">
+          <label>Target Win Score:</label>
+          <input type="number" id="cfg-win-score" value="1000" min="100" max="9900" step="100">
+        </div>
+        <div class="form-row">
+          <label>Control Scheme:</label>
+          <select id="cfg-controls">
+            <option value="qaop">QAOP + Space (Sinclair Standard)</option>
+            <option value="kempston">Kempston Joystick (Port $1F)</option>
+            <option value="sinclair">Sinclair Interface 2 (67890)</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+#!/usr/bin/env python3
+"""
+Executable wrapper script for the ZX Spectrum Game Creator.
+"""
+
+import sys
+import os
+
+pkg_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if pkg_dir not in sys.path:
+    sys.path.insert(0, pkg_dir)
+
+from zxcreator.cli import main
+
+if __name__ == "__main__":
+    main()
